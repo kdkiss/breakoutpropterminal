@@ -1,6 +1,7 @@
 process.env.SKIP_MAIN_BOOTSTRAP = 'true';
 
 const path = require('node:path');
+const { pathToFileURL } = require('node:url');
 const test = require('node:test');
 const assert = require('node:assert/strict');
 
@@ -333,6 +334,50 @@ test(
 
     navHandler(event, 'file:///tmp/next.html');
     assert.equal(event.prevented, false);
+
+    delete process.env.ELECTRON_START_URL;
+    __resetForTesting();
+  },
+);
+
+test(
+  'bootstrap blocks attempts to leave the start directory for file:// origins',
+  { concurrency: false },
+  async () => {
+    const double = createElectronDouble();
+    __setElectronForTesting(double.bindings);
+
+    const appRoot = path.join(process.cwd(), 'test-app-root');
+    const startFile = path.join(appRoot, 'index.html');
+    process.env.ELECTRON_START_URL = pathToFileURL(startFile).href;
+
+    bootstrap();
+    await flushPromises();
+
+    const [createdWindow] = double.BrowserWindowStub.instances;
+    assert.ok(createdWindow.windowOpenHandler, 'expected window open handler to be registered');
+
+    const navHandler = createdWindow.webContentsHandlers['will-navigate'];
+    assert.ok(navHandler, 'expected will-navigate handler to be registered');
+
+    const outsidePath =
+      process.platform === 'win32'
+        ? path.join(path.parse(appRoot).root, 'Windows', 'System32', 'config', 'SAM')
+        : '/etc/passwd';
+    const outsideUrl = pathToFileURL(outsidePath).href;
+
+    const denyResult = createdWindow.windowOpenHandler({ url: outsideUrl });
+    assert.deepEqual(denyResult, { action: 'deny' });
+
+    const event = { prevented: false };
+    event.preventDefault = () => {
+      event.prevented = true;
+    };
+
+    navHandler(event, outsideUrl);
+    assert.equal(event.prevented, true);
+
+    assert.deepEqual(double.openExternalCalls, []);
 
     delete process.env.ELECTRON_START_URL;
     __resetForTesting();
