@@ -29,8 +29,8 @@ test('allows https URLs to open externally', () => {
   openedUrl = null;
   const httpResult = openExternalIfSafe('http://example.com/basic', openExternalStub);
 
-  assert.equal(httpResult, true);
-  assert.equal(openedUrl, 'http://example.com/basic');
+  assert.equal(httpResult, false);
+  assert.equal(openedUrl, null);
 
 });
 

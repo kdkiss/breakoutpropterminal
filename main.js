@@ -59,7 +59,7 @@ function ensureContentSecurityPolicy(details, callback) {
 
 const defaultAllowedOrigin = 'https://app.breakoutprop.com';
 let allowedOrigins = new Set([defaultAllowedOrigin]);
-const allowedProtocols = new Set(['http:', 'https:']);
+const allowedProtocols = new Set(['https:']);
 
 let startUrl = defaultAllowedOrigin;
 
