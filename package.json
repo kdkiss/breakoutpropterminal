@@ -7,6 +7,8 @@
   "license": "ISC",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
+    "generate-icons": "node scripts/generate-icons.js",
+    "prepackage": "npm run generate-icons",
     "start": "electron-forge start",
     "package": "electron-forge package",
     "make": "electron-forge make"
@@ -22,7 +24,8 @@
     "@electron-forge/plugin-fuses": "^7.6.0",
     "@electron/fuses": "^1.8.0",
     "electron": "33.2.1",
-    "electron-winstaller": "^5.4.0"
+    "electron-winstaller": "^5.4.0",
+    "icon-gen": "^5.0.0"
   },
   "dependencies": {
     "electron-squirrel-startup": "^1.0.1"
