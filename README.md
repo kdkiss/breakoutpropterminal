@@ -44,7 +44,7 @@ npm run package
 npm run make
 ```
 
-Refer to `forge.config.js` for maker configuration and add or adjust makers as needed for your distribution targets.
+Refer to the Forge configuration embedded in `package.json` (`package.json → config.forge`) for maker and plugin settings. Within that JSON block you can add, remove, or adjust makers and plugins to match the installers and packaging tweaks your release process requires.
 
 ## Updating an Existing Installation
 
