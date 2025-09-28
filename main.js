@@ -42,6 +42,19 @@ function buildContentSecurityPolicy() {
   return directives.join(' ');
 }
 
+function ensureContentSecurityPolicy(details, callback) {
+  const responseHeaders = details.responseHeaders || {};
+  const hasContentSecurityPolicy = Object.keys(responseHeaders).some(
+    (header) => header.toLowerCase() === 'content-security-policy',
+  );
+
+  if (!hasContentSecurityPolicy) {
+    responseHeaders['Content-Security-Policy'] = [buildContentSecurityPolicy()];
+  }
+
+  callback({ responseHeaders });
+}
+
 const allowedOrigin = 'https://app.breakoutprop.com';
 const allowedProtocols = new Set(['http:', 'https:']);
 let startUrl = allowedOrigin;
@@ -115,18 +128,7 @@ function bootstrap() {
 
   app.whenReady().then(() => {
     if (session.defaultSession) {
-      session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
-        const responseHeaders = details.responseHeaders || {};
-        const hasContentSecurityPolicy = Object.keys(responseHeaders).some(
-          (header) => header.toLowerCase() === 'content-security-policy',
-        );
-
-        if (!hasContentSecurityPolicy) {
-          responseHeaders['Content-Security-Policy'] = [buildContentSecurityPolicy()];
-        }
-
-        callback({ responseHeaders });
-      });
+      session.defaultSession.webRequest.onHeadersReceived(ensureContentSecurityPolicy);
     }
 
     createWindow();
