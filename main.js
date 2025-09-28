@@ -60,6 +60,7 @@ let allowedOrigin = defaultAllowedOrigin;
 const allowedProtocols = new Set(['http:', 'https:']);
 let startUrl = defaultAllowedOrigin;
 
+
 function openExternalIfSafe(targetUrl, openExternal = shell.openExternal) {
   let parsed;
 

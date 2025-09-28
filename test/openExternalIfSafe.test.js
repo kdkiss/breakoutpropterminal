@@ -31,6 +31,7 @@ test('rejects URLs with disallowed protocols', () => {
   };
 
   const disallowed = [
+    'http://example.com',
     'file:///etc/passwd',
     'javascript:alert(1)',
     'custom-scheme://data',
