@@ -1,5 +1,6 @@
 const crypto = require('crypto');
 const path = require('path');
+const { fileURLToPath } = require('node:url');
 const electron = require('electron');
 
 let { app, BrowserWindow, shell, session } = electron;
@@ -63,6 +64,7 @@ const defaultAllowedOrigin = 'https://app.breakoutprop.com';
 let allowedOrigins = new Set([defaultAllowedOrigin]);
 
 let startUrl = defaultAllowedOrigin;
+let startFileRoot = null;
 
 function resetAllowedOrigins() {
   allowedOrigins = new Set([defaultAllowedOrigin]);
@@ -72,7 +74,20 @@ function isOriginAllowed(url) {
   try {
     const parsed = new URL(url);
     if (parsed.protocol === 'file:') {
-      return startUrl.startsWith('file://');
+      if (!startFileRoot) {
+        return false;
+      }
+
+      try {
+        const targetPath = path.resolve(fileURLToPath(parsed));
+        const relative = path.relative(startFileRoot, targetPath);
+        const isWithinRoot =
+          relative === '' || (!relative.startsWith('..') && !path.isAbsolute(relative));
+
+        return isWithinRoot;
+      } catch {
+        return false;
+      }
     }
 
     return allowedOrigins.has(parsed.origin);
@@ -155,6 +170,29 @@ function createWindow() {
   });
 }
 
+function computeStartFileRoot(url) {
+  if (typeof url !== 'string') {
+    return null;
+  }
+
+  try {
+    const parsed = new URL(url);
+
+    if (parsed.protocol !== 'file:') {
+      return null;
+    }
+
+    const absolutePath = path.resolve(fileURLToPath(parsed));
+    if (url.endsWith('/')) {
+      return absolutePath;
+    }
+
+    return path.dirname(absolutePath);
+  } catch {
+    return null;
+  }
+}
+
 function bootstrap() {
   resetAllowedOrigins();
 
@@ -192,6 +230,7 @@ function bootstrap() {
   }
 
   startUrl = normalizedStartUrl;
+  startFileRoot = computeStartFileRoot(startUrl);
 
   if (typeof startUrl === 'string') {
     const isHttp = startUrl.startsWith('http://') || startUrl.startsWith('https://');
@@ -239,6 +278,7 @@ function __resetForTesting() {
   ({ app, BrowserWindow, shell, session } = electron);
   resetAllowedOrigins();
   startUrl = defaultAllowedOrigin;
+  startFileRoot = null;
 }
 
 module.exports = {
