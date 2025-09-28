@@ -32,6 +32,16 @@ npm start
 
 `npm start` runs `electron-forge start`, generates icons through the `prestart` hook, and opens the BreakoutProp web terminal within the Electron shell.
 
+### Overriding the start URL
+
+During development you can point the shell at a different origin by setting the `ELECTRON_START_URL` environment variable. The value must be a full `http://`, `https://`, or `file://` URL so the app can parse and validate it. For example:
+
+```bash
+ELECTRON_START_URL=http://localhost:3000 npm start
+```
+
+If the override is missing or fails validation (for example, because it is not a parseable `http(s)` or `file` URL), the shell falls back to the production BreakoutProp URL to avoid loading an unexpected destination.
+
 ## Packaging and Distribution
 
 Electron Forge can generate distributable artifacts through the included `make` targets. Icons are generated automatically before each build step.
