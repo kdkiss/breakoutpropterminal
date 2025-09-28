@@ -6,12 +6,12 @@
   "author": "Your Name or Organization",
   "license": "ISC",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
     "generate:icons": "node scripts/generate-icons.js",
     "prestart": "npm run generate:icons",
-
     "lint": "eslint .",
-    "test": "npm run lint",
+    "format": "prettier --check .",
+    "test": "npm run lint && npm run format && npm run test:integration",
+    "test:integration": "node scripts/run-playwright.js",
     "start": "electron-forge start",
     "prepackage": "npm run generate:icons",
     "package": "electron-forge package",
@@ -28,9 +28,13 @@
     "@electron-forge/plugin-auto-unpack-natives": "^7.6.0",
     "@electron-forge/plugin-fuses": "^7.6.0",
     "@electron/fuses": "^1.8.0",
+    "@playwright/test": "^1.48.2",
     "electron": "33.2.1",
     "electron-winstaller": "^5.4.0",
-    "eslint": "^8.57.0"
+    "eslint": "^8.57.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-prettier": "^5.2.1",
+    "prettier": "^3.3.3"
   },
   "dependencies": {
     "electron-squirrel-startup": "^1.0.1"

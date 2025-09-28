@@ -1,7 +1,22 @@
 const path = require('path');
 const { app, BrowserWindow, shell, session } = require('electron');
 
-const allowedOrigin = 'https://app.breakoutprop.com';
+const defaultStartUrl = 'https://app.breakoutprop.com/';
+const startUrl = process.env.ELECTRON_START_URL || defaultStartUrl;
+
+let allowedOrigin = 'https://app.breakoutprop.com';
+try {
+  allowedOrigin = new URL(startUrl).origin;
+} catch (error) {
+  allowedOrigin = new URL(defaultStartUrl).origin;
+}
+
+if (process.env.ELECTRON_HEADLESS === '1') {
+  app.commandLine.appendSwitch('headless');
+  app.commandLine.appendSwitch('disable-gpu');
+  app.commandLine.appendSwitch('disable-software-rasterizer');
+  app.commandLine.appendSwitch('no-sandbox');
+}
 
 if (require('electron-squirrel-startup')) {
   app.quit();
@@ -21,7 +36,7 @@ function createWindow() {
     },
   });
 
-  win.loadURL('https://app.breakoutprop.com/');
+  win.loadURL(startUrl);
 
   win.webContents.setWindowOpenHandler(({ url }) => {
     try {
@@ -54,7 +69,7 @@ app.whenReady().then(() => {
     session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
       const responseHeaders = details.responseHeaders || {};
       const hasContentSecurityPolicy = Object.keys(responseHeaders).some(
-        (header) => header.toLowerCase() === 'content-security-policy'
+        (header) => header.toLowerCase() === 'content-security-policy',
       );
 
       if (!hasContentSecurityPolicy) {

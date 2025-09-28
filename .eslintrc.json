@@ -5,7 +5,7 @@
     "node": true,
     "es2021": true
   },
-  "extends": ["eslint:recommended"],
+  "extends": ["eslint:recommended", "plugin:prettier/recommended"],
   "parserOptions": {
     "ecmaVersion": 2021,
     "sourceType": "script"
@@ -13,5 +13,17 @@
   "rules": {
     "no-unused-vars": ["warn", { "argsIgnorePattern": "^_" }],
     "no-console": "off"
-  }
+  },
+  "overrides": [
+    {
+      "files": ["tests/**/*.spec.js"],
+      "env": {
+        "node": true
+      },
+      "globals": {
+        "test": "readonly",
+        "expect": "readonly"
+      }
+    }
+  ]
 }
