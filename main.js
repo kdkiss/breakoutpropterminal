@@ -153,7 +153,6 @@ function bootstrap() {
         // the shell into executing arbitrary protocols inside Electron.
         if (parsedStart.protocol === 'http:' || parsedStart.protocol === 'https:') {
           normalizedStartUrl = parsedStart.toString();
-          allowedOrigins.add(parsedStart.origin);
         } else if (parsedStart.protocol === 'file:') {
           normalizedStartUrl = parsedStart.toString();
         } else {
@@ -173,6 +172,8 @@ function bootstrap() {
     }
   }
 
+  startUrl = normalizedStartUrl;
+
   if (typeof startUrl === 'string') {
     const isHttp = startUrl.startsWith('http://') || startUrl.startsWith('https://');
 
@@ -185,7 +186,6 @@ function bootstrap() {
       }
     }
   }
-
 
   app.whenReady().then(() => {
     if (session.defaultSession) {
