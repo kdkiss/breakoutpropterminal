@@ -2,10 +2,27 @@ const path = require('path');
 const { app, BrowserWindow, shell, session } = require('electron');
 
 const allowedOrigin = 'https://app.breakoutprop.com';
+const allowedProtocols = new Set(['http:', 'https:']);
 
-if (require('electron-squirrel-startup')) {
-  app.quit();
-  return;
+function openExternalIfSafe(targetUrl, openExternal = shell.openExternal) {
+  if (typeof targetUrl !== 'string') {
+    return false;
+  }
+
+  let parsed;
+
+  try {
+    parsed = new URL(targetUrl);
+  } catch {
+    return false;
+  }
+
+  if (!allowedProtocols.has(parsed.protocol)) {
+    return false;
+  }
+
+  openExternal(targetUrl);
+  return true;
 }
 
 function createWindow() {
@@ -28,11 +45,11 @@ function createWindow() {
       if (new URL(url).origin === allowedOrigin) {
         return { action: 'allow' };
       }
-    } catch (error) {
+    } catch {
       // fall through to deny below
     }
 
-    shell.openExternal(url);
+    openExternalIfSafe(url);
     return { action: 'deny' };
   });
 
@@ -40,49 +57,62 @@ function createWindow() {
     try {
       if (new URL(url).origin !== allowedOrigin) {
         event.preventDefault();
-        shell.openExternal(url);
+        openExternalIfSafe(url);
       }
-    } catch (error) {
+    } catch {
       event.preventDefault();
-      shell.openExternal(url);
+      openExternalIfSafe(url);
     }
   });
 }
 
-app.whenReady().then(() => {
-  if (session.defaultSession) {
-    session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
-      const responseHeaders = details.responseHeaders || {};
-      const hasContentSecurityPolicy = Object.keys(responseHeaders).some(
-        (header) => header.toLowerCase() === 'content-security-policy'
-      );
-
-      if (!hasContentSecurityPolicy) {
-        responseHeaders['Content-Security-Policy'] = [
-          "default-src 'self' https://app.breakoutprop.com https://*.breakoutprop.com data: blob:; " +
-            "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://app.breakoutprop.com https://*.breakoutprop.com; " +
-            "connect-src 'self' https://app.breakoutprop.com https://*.breakoutprop.com wss://*.breakoutprop.com; " +
-            "img-src 'self' data: https://app.breakoutprop.com https://*.breakoutprop.com; " +
-            "style-src 'self' 'unsafe-inline' https://app.breakoutprop.com https://*.breakoutprop.com; " +
-            "frame-ancestors 'self';",
-        ];
-      }
-
-      callback({ responseHeaders });
-    });
+function bootstrap() {
+  if (require('electron-squirrel-startup')) {
+    app.quit();
+    return;
   }
 
-  createWindow();
+  app.whenReady().then(() => {
+    if (session.defaultSession) {
+      session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
+        const responseHeaders = details.responseHeaders || {};
+        const hasContentSecurityPolicy = Object.keys(responseHeaders).some(
+          (header) => header.toLowerCase() === 'content-security-policy'
+        );
 
-  app.on('activate', () => {
-    if (BrowserWindow.getAllWindows().length === 0) {
-      createWindow();
+        if (!hasContentSecurityPolicy) {
+          responseHeaders['Content-Security-Policy'] = [
+            "default-src 'self' https://app.breakoutprop.com https://*.breakoutprop.com data: blob:; " +
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://app.breakoutprop.com https://*.breakoutprop.com; " +
+              "connect-src 'self' https://app.breakoutprop.com https://*.breakoutprop.com wss://*.breakoutprop.com; " +
+              "img-src 'self' data: https://app.breakoutprop.com https://*.breakoutprop.com; " +
+              "style-src 'self' 'unsafe-inline' https://app.breakoutprop.com https://*.breakoutprop.com; " +
+              "frame-ancestors 'self';",
+          ];
+        }
+
+        callback({ responseHeaders });
+      });
+    }
+
+    createWindow();
+
+    app.on('activate', () => {
+      if (BrowserWindow.getAllWindows().length === 0) {
+        createWindow();
+      }
+    });
+  });
+
+  app.on('window-all-closed', () => {
+    if (process.platform !== 'darwin') {
+      app.quit();
     }
   });
-});
+}
 
-app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') {
-    app.quit();
-  }
-});
+if (process.env.SKIP_MAIN_BOOTSTRAP !== 'true') {
+  bootstrap();
+}
+
+module.exports = { openExternalIfSafe, bootstrap };
