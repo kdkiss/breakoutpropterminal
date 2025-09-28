@@ -54,6 +54,10 @@ npm run package
 npm run make
 ```
 
+> **Tip:** The Linux makers (`deb`/`rpm`) require additional system packages such as
+> `dpkg` and `fakeroot`. Install those tools before running `npm run make` on Linux,
+> or limit the Forge makers list to formats supported on your current platform.
+
 ### Downloading the latest published installer
 
 To retrieve the most up-to-date installer published on GitHub, use the bundled downloader script. The tool automatically selects the best asset for your platform and architecture, writing the installer to the current working directory by default.
