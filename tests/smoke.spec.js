@@ -89,6 +89,18 @@ test.describe('Breakout Prop Electron app', () => {
       const popup = await popupPromise;
       await popup.waitForLoadState('load');
       expect(await popup.url()).toBe(`${startUrl}child`);
+
+      const breakoutPopupPromise = electronApp.waitForEvent('window');
+      await mainWindow.evaluate(() => {
+        window.open('https://app.breakoutprop.com/dashboard', '_blank');
+      });
+
+      const breakoutPopup = await breakoutPopupPromise;
+      await breakoutPopup.waitForLoadState('domcontentloaded').catch(() => {});
+      expect(await breakoutPopup.url()).toBe(
+        'https://app.breakoutprop.com/dashboard',
+      );
+      await breakoutPopup.close();
     } finally {
       if (electronApp) {
         await electronApp.close();

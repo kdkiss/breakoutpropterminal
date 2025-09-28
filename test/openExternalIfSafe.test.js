@@ -11,9 +11,12 @@ test('allows vetted protocols to open externally', () => {
     openedUrl = url;
   };
 
-  const stringResult = openExternalIfSafe('https://example.com/path', openExternalStub);
+  const httpsResult = openExternalIfSafe(
+    'https://example.com/path',
+    openExternalStub,
+  );
 
-  assert.equal(stringResult, true);
+  assert.equal(httpsResult, true);
   assert.equal(openedUrl, 'https://example.com/path');
 
   openedUrl = null;
@@ -22,6 +25,12 @@ test('allows vetted protocols to open externally', () => {
 
   assert.equal(objectResult, true);
   assert.equal(openedUrl, 'https://example.com/other');
+
+  openedUrl = null;
+  const httpResult = openExternalIfSafe('http://example.com/basic', openExternalStub);
+
+  assert.equal(httpResult, true);
+  assert.equal(openedUrl, 'http://example.com/basic');
 });
 
 test('rejects URLs with disallowed protocols', () => {
@@ -31,7 +40,6 @@ test('rejects URLs with disallowed protocols', () => {
   };
 
   const disallowed = [
-    'http://example.com',
     'file:///etc/passwd',
     'javascript:alert(1)',
     'custom-scheme://data',

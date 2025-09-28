@@ -58,9 +58,23 @@ function ensureContentSecurityPolicy(details, callback) {
 }
 
 const defaultAllowedOrigin = 'https://app.breakoutprop.com';
-let allowedOrigin = defaultAllowedOrigin;
+let allowedOrigins = new Set([defaultAllowedOrigin]);
 const allowedProtocols = new Set(['http:', 'https:']);
 let startUrl = defaultAllowedOrigin;
+
+
+function resetAllowedOrigins() {
+  allowedOrigins = new Set([defaultAllowedOrigin]);
+}
+
+function isOriginAllowed(url) {
+  try {
+    const parsed = new URL(url);
+    return allowedOrigins.has(parsed.origin);
+  } catch {
+    return false;
+  }
+}
 
 
 function openExternalIfSafe(targetUrl, openExternal = shell.openExternal) {
@@ -102,12 +116,8 @@ function createWindow() {
   win.loadURL(startUrl);
 
   win.webContents.setWindowOpenHandler(({ url }) => {
-    try {
-      if (new URL(url).origin === allowedOrigin) {
-        return { action: 'allow' };
-      }
-    } catch {
-      // fall through to deny below
+    if (isOriginAllowed(url)) {
+      return { action: 'allow' };
     }
 
     openExternalIfSafe(url);
@@ -115,20 +125,17 @@ function createWindow() {
   });
 
   win.webContents.on('will-navigate', (event, url) => {
-    try {
-      if (new URL(url).origin !== allowedOrigin) {
-        event.preventDefault();
-        openExternalIfSafe(url);
-      }
-    } catch {
-      event.preventDefault();
-      openExternalIfSafe(url);
+    if (isOriginAllowed(url)) {
+      return;
     }
+
+    event.preventDefault();
+    openExternalIfSafe(url);
   });
 }
 
 function bootstrap() {
-  allowedOrigin = defaultAllowedOrigin;
+  resetAllowedOrigins();
   startUrl = process.env.ELECTRON_START_URL || defaultAllowedOrigin;
 
   if (typeof startUrl === 'string') {
@@ -137,9 +144,8 @@ function bootstrap() {
     if (isHttp) {
       try {
         const parsedStart = new URL(startUrl);
-        allowedOrigin = parsedStart.origin;
+        allowedOrigins.add(parsedStart.origin);
       } catch {
-        allowedOrigin = defaultAllowedOrigin;
         startUrl = defaultAllowedOrigin;
       }
     }
@@ -176,7 +182,8 @@ function __setElectronForTesting(overrides) {
 
 function __resetForTesting() {
   ({ app, BrowserWindow, shell, session } = electron);
-  startUrl = allowedOrigin;
+  resetAllowedOrigins();
+  startUrl = defaultAllowedOrigin;
 }
 
 module.exports = {

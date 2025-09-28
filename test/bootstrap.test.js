@@ -111,7 +111,7 @@ test(
 );
 
 test(
-  'bootstrap honors ELECTRON_START_URL while preserving allowedOrigin behavior',
+  'bootstrap honors ELECTRON_START_URL while keeping breakout origin allowed',
   { concurrency: false },
   async () => {
     const double = createElectronDouble();
@@ -130,16 +130,49 @@ test(
       'expected window open handler to be registered',
     );
 
+    const navHandler = createdWindow.webContentsHandlers['will-navigate'];
+    assert.ok(navHandler, 'expected will-navigate handler to be registered');
+
     const allowResult = createdWindow.windowOpenHandler({
       url: 'https://app.breakoutprop.com/path',
     });
     assert.deepEqual(allowResult, { action: 'allow' });
 
-    const denyResult = createdWindow.windowOpenHandler({
+    const allowStartResult = createdWindow.windowOpenHandler({
       url: 'http://localhost:3000/other',
     });
+    assert.deepEqual(allowStartResult, { action: 'allow' });
+
+    const denyResult = createdWindow.windowOpenHandler({
+      url: 'https://example.com/out',
+    });
     assert.deepEqual(denyResult, { action: 'deny' });
-    assert.deepEqual(double.openExternalCalls, ['http://localhost:3000/other']);
+    assert.deepEqual(double.openExternalCalls, ['https://example.com/out']);
+
+    const createEvent = () => {
+      const event = { prevented: false };
+      event.preventDefault = () => {
+        event.prevented = true;
+      };
+      return event;
+    };
+
+    let event = createEvent();
+    navHandler(event, 'https://app.breakoutprop.com/dashboard');
+    assert.equal(event.prevented, false);
+
+    event = createEvent();
+    navHandler(event, 'http://localhost:3000/settings');
+    assert.equal(event.prevented, false);
+
+    event = createEvent();
+    navHandler(event, 'https://example.com/elsewhere');
+    assert.equal(event.prevented, true);
+    assert.deepEqual(double.openExternalCalls, [
+      'https://example.com/out',
+      'https://example.com/elsewhere',
+    ]);
+
     delete process.env.ELECTRON_START_URL;
     __resetForTesting();
   },
