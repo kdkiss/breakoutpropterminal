@@ -5,15 +5,17 @@ const allowedOrigin = 'https://app.breakoutprop.com';
 const allowedProtocols = new Set(['http:', 'https:']);
 
 function openExternalIfSafe(targetUrl, openExternal = shell.openExternal) {
-  if (typeof targetUrl !== 'string') {
-    return false;
-  }
-
   let parsed;
 
-  try {
-    parsed = new URL(targetUrl);
-  } catch {
+  if (targetUrl instanceof URL) {
+    parsed = targetUrl;
+  } else if (typeof targetUrl === 'string') {
+    try {
+      parsed = new URL(targetUrl);
+    } catch {
+      return false;
+    }
+  } else {
     return false;
   }
 
@@ -21,7 +23,7 @@ function openExternalIfSafe(targetUrl, openExternal = shell.openExternal) {
     return false;
   }
 
-  openExternal(targetUrl);
+  openExternal(parsed.toString());
   return true;
 }
 
