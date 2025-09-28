@@ -1,5 +1,6 @@
 process.env.SKIP_MAIN_BOOTSTRAP = 'true';
 
+const path = require('node:path');
 const test = require('node:test');
 const assert = require('node:assert/strict');
 
@@ -130,12 +131,34 @@ test(
     const allowResult = createdWindow.windowOpenHandler({
       url: 'https://app.breakoutprop.com/path',
     });
-    assert.deepEqual(allowResult, { action: 'allow' });
+    assert.deepEqual(allowResult, {
+      action: 'allow',
+      overrideBrowserWindowOptions: {
+        webPreferences: {
+          nodeIntegration: false,
+          contextIsolation: true,
+          sandbox: true,
+          enableRemoteModule: false,
+          preload: path.join(__dirname, '..', 'preload.js'),
+        },
+      },
+    });
 
     const allowStartResult = createdWindow.windowOpenHandler({
       url: 'http://localhost:3000/other',
     });
-    assert.deepEqual(allowStartResult, { action: 'allow' });
+    assert.deepEqual(allowStartResult, {
+      action: 'allow',
+      overrideBrowserWindowOptions: {
+        webPreferences: {
+          nodeIntegration: false,
+          contextIsolation: true,
+          sandbox: true,
+          enableRemoteModule: false,
+          preload: path.join(__dirname, '..', 'preload.js'),
+        },
+      },
+    });
 
     const denyResult = createdWindow.windowOpenHandler({
       url: 'https://example.com/out',
@@ -168,6 +191,58 @@ test(
     ]);
 
     delete process.env.ELECTRON_START_URL;
+    __resetForTesting();
+  },
+);
+
+test(
+  'child windows receive navigation guards',
+  { concurrency: false },
+  async () => {
+    const double = createElectronDouble();
+    __setElectronForTesting(double.bindings);
+
+    bootstrap();
+    await flushPromises();
+
+    const [createdWindow] = double.BrowserWindowStub.instances;
+    const didCreateHandler = createdWindow.webContentsHandlers['did-create-window'];
+    assert.ok(didCreateHandler, 'expected did-create-window handler to be registered');
+
+    let childWindowOpenHandler;
+    const childHandlers = {};
+
+    didCreateHandler({
+      webContents: {
+        setWindowOpenHandler: (handler) => {
+          childWindowOpenHandler = handler;
+        },
+        on: (event, handler) => {
+          childHandlers[event] = handler;
+        },
+      },
+    });
+
+    assert.ok(childWindowOpenHandler, 'expected child window open handler to be registered');
+    assert.ok(childHandlers['will-navigate'], 'expected child will-navigate handler');
+
+    const childAllow = childWindowOpenHandler({ url: 'https://app.breakoutprop.com/' });
+    assert.deepEqual(childAllow, {
+      action: 'allow',
+      overrideBrowserWindowOptions: {
+        webPreferences: {
+          nodeIntegration: false,
+          contextIsolation: true,
+          sandbox: true,
+          enableRemoteModule: false,
+          preload: path.join(__dirname, '..', 'preload.js'),
+        },
+      },
+    });
+
+    const childDeny = childWindowOpenHandler({ url: 'https://example.com' });
+    assert.deepEqual(childDeny, { action: 'deny' });
+
     __resetForTesting();
   },
 );
@@ -237,7 +312,18 @@ test(
     const allowResult = createdWindow.windowOpenHandler({
       url: 'file:///tmp/next.html',
     });
-    assert.deepEqual(allowResult, { action: 'allow' });
+    assert.deepEqual(allowResult, {
+      action: 'allow',
+      overrideBrowserWindowOptions: {
+        webPreferences: {
+          nodeIntegration: false,
+          contextIsolation: true,
+          sandbox: true,
+          enableRemoteModule: false,
+          preload: path.join(__dirname, '..', 'preload.js'),
+        },
+      },
+    });
 
     const navHandler = createdWindow.webContentsHandlers['will-navigate'];
     const event = { prevented: false };
