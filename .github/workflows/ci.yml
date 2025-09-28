@@ -7,6 +7,7 @@ on:
 
 jobs:
   lint-and-test:
+
     runs-on: ubuntu-latest
     env:
       PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
@@ -24,4 +25,5 @@ jobs:
         run: npm ci
 
       - name: Run linting and tests
+
         run: npm test
