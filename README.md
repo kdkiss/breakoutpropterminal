@@ -34,13 +34,13 @@ npm start
 
 ### Overriding the start URL
 
-During development you can point the shell at a different origin by setting the `ELECTRON_START_URL` environment variable. The value must be a full `http://`, `https://`, or `file://` URL so the app can parse and validate it. For example:
+During development you can point the shell at a different origin by setting the `ELECTRON_START_URL` environment variable. The value is trimmed before use and must resolve to a full `http://`, `https://`, or `file://` URL so the app can parse and validate it. For example:
 
 ```bash
 ELECTRON_START_URL=http://localhost:3000 npm start
 ```
 
-If the override is missing or fails validation (for example, because it is not a parseable `http(s)` or `file` URL), the shell falls back to the production BreakoutProp URL to avoid loading an unexpected destination.
+If the override is missing or fails validation (for example, because it is blank, not parseable, or uses an unexpected scheme), the shell falls back to the production BreakoutProp URL to avoid loading an unexpected destination.
 
 ## Packaging and Distribution
 
