@@ -78,13 +78,13 @@ The app does not require custom environment variables or bundled secrets. Users 
 Contributions are welcome. Before submitting changes:
 
 1. Ensure dependencies are installed (`npm install`).
-2. Run the lint suite (wired to `npm test`) to enforce project standards.
+2. Run the automated checks. `npm test` now executes linting, formatting, unit tests, and the Playwright integration suite in the same order used in CI.
    ```bash
    npm test
    ```
-   or
+   To run only the Node.js unit tests, use the dedicated command:
    ```bash
-   npm run lint
+   npm run test:unit
    ```
 3. Verify the app still runs (`npm start`) and, if applicable, that packaged artifacts build successfully (`npm run make`).
 
