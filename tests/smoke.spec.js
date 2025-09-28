@@ -90,15 +90,15 @@ test.describe('Breakout Prop Electron app', () => {
       await popup.waitForLoadState('load');
       expect(await popup.url()).toBe(`${startUrl}child`);
 
-      const breakoutPopupPromise = electronApp.waitForEvent('window');
+      const disallowedPopupPromise = electronApp
+        .waitForEvent('window', { timeout: 2000 })
+        .catch(() => null);
       await mainWindow.evaluate(() => {
-        window.open('https://app.breakoutprop.com/dashboard', '_blank');
+        window.open('https://example.com/', '_blank');
       });
 
-      const breakoutPopup = await breakoutPopupPromise;
-      await breakoutPopup.waitForLoadState('domcontentloaded').catch(() => {});
-      expect(await breakoutPopup.url()).toBe('https://app.breakoutprop.com/dashboard');
-      await breakoutPopup.close();
+      const disallowedPopup = await disallowedPopupPromise;
+      expect(disallowedPopup).toBeNull();
     } finally {
       if (electronApp) {
         await electronApp.close();

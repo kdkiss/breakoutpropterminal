@@ -4,6 +4,14 @@ const electron = require('electron');
 
 let { app, BrowserWindow, shell, session } = electron;
 
+const lockedDownWebPreferences = {
+  nodeIntegration: false,
+  contextIsolation: true,
+  sandbox: true,
+  enableRemoteModule: false,
+  preload: path.join(__dirname, 'preload.js'),
+};
+
 // Network captures of https://app.breakoutprop.com/ (via Playwright) show the
 // UI pulling first-party assets plus Cloudflare's analytics beacon. Keep these
 // allow-lists in sync with that remote footprint so the nonce-based CSP stays
@@ -102,37 +110,48 @@ function openExternalIfSafe(targetUrl, openExternal = shell.openExternal) {
   return true;
 }
 
-function createWindow() {
-  const win = new BrowserWindow({
-    width: 1280,
-    height: 800,
-    webPreferences: {
-      nodeIntegration: false,
-      contextIsolation: true,
-      sandbox: true,
-      preload: path.join(__dirname, 'preload.js'),
-      enableRemoteModule: false,
-    },
-  });
+function applyNavigationGuards(contents) {
+  if (!contents) {
+    return;
+  }
 
-  win.loadURL(startUrl);
-
-  win.webContents.setWindowOpenHandler(({ url }) => {
+  contents.setWindowOpenHandler(({ url }) => {
     if (isOriginAllowed(url)) {
-      return { action: 'allow' };
+      return {
+        action: 'allow',
+        overrideBrowserWindowOptions: {
+          webPreferences: { ...lockedDownWebPreferences },
+        },
+      };
     }
 
     openExternalIfSafe(url);
     return { action: 'deny' };
   });
 
-  win.webContents.on('will-navigate', (event, url) => {
+  contents.on('will-navigate', (event, url) => {
     if (isOriginAllowed(url)) {
       return;
     }
 
     event.preventDefault();
     openExternalIfSafe(url);
+  });
+}
+
+function createWindow() {
+  const win = new BrowserWindow({
+    width: 1280,
+    height: 800,
+    webPreferences: { ...lockedDownWebPreferences },
+  });
+
+  win.loadURL(startUrl);
+
+  applyNavigationGuards(win.webContents);
+
+  win.webContents.on('did-create-window', (childWindow) => {
+    applyNavigationGuards(childWindow.webContents);
   });
 }
 
