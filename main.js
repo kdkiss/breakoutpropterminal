@@ -1,6 +1,8 @@
 const crypto = require('crypto');
 const path = require('path');
-const { app, BrowserWindow, shell, session } = require('electron');
+const electron = require('electron');
+
+let { app, BrowserWindow, shell, session } = electron;
 
 // Network captures of https://app.breakoutprop.com/ (via Playwright) show the
 // UI pulling first-party assets plus Cloudflare's analytics beacon. Keep these
@@ -168,4 +170,19 @@ if (process.env.SKIP_MAIN_BOOTSTRAP !== 'true') {
   bootstrap();
 }
 
-module.exports = { openExternalIfSafe, bootstrap };
+function __setElectronForTesting(overrides) {
+  ({ app, BrowserWindow, shell, session } = overrides);
+}
+
+function __resetForTesting() {
+  ({ app, BrowserWindow, shell, session } = electron);
+  startUrl = allowedOrigin;
+}
+
+module.exports = {
+  openExternalIfSafe,
+  ensureContentSecurityPolicy,
+  bootstrap,
+  __setElectronForTesting,
+  __resetForTesting,
+};
