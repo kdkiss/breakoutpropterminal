@@ -67,7 +67,7 @@ The project does not currently ship an auto-updater; distribute new installers g
 The Electron shell hosts the remote BreakoutProp web application at `https://app.breakoutprop.com` and applies the following hardening measures (see `main.js`):
 
 - **Renderer isolation** – `nodeIntegration` is disabled, `contextIsolation` is enabled, and the renderer runs in a sandboxed environment with a minimal preload script to prevent access to Node.js APIs from web content.
-- **Navigation restrictions** – window creation and in-app navigation are limited to the trusted BreakoutProp origin; external links open in the system browser instead of the Electron window.
+- **Navigation restrictions** – window creation and in-app navigation are limited to the trusted BreakoutProp origin; external links open in the system browser instead of the Electron window. Only HTTPS links are permitted to launch externally, preventing downgrades to insecure handlers.
 - **Content Security Policy enforcement** – responses without a CSP header receive a restrictive default policy covering scripts, styles, images, WebSocket connections, and frame ancestors.
 - **Remote content** – no local HTML is served. The hosted BreakoutProp application continues to handle authentication; no additional credentials or API keys are stored in the desktop shell.
 

@@ -56,7 +56,10 @@ function ensureContentSecurityPolicy(details, callback) {
 }
 
 const allowedOrigin = 'https://app.breakoutprop.com';
-const allowedProtocols = new Set(['http:', 'https:']);
+// Only allow encrypted schemes we explicitly trust when delegating to the
+// system browser. Tightening this list avoids leaking sensitive URLs to
+// handlers that do not provide transport security.
+const allowedProtocols = new Set(['https:']);
 let startUrl = allowedOrigin;
 
 function openExternalIfSafe(targetUrl, openExternal = shell.openExternal) {
