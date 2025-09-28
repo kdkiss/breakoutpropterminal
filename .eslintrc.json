@@ -13,5 +13,13 @@
   "rules": {
     "no-unused-vars": ["warn", { "argsIgnorePattern": "^_" }],
     "no-console": "off"
-  }
+  },
+  "overrides": [
+    {
+      "files": ["tests/**/*.test.js"],
+      "env": {
+        "jest": true
+      }
+    }
+  ]
 }

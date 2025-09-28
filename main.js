@@ -1,29 +1,9 @@
 const path = require('path');
-const { app, BrowserWindow, shell, session } = require('electron');
+const { app, BrowserWindow, session } = require('electron');
+
+const { openExternalIfSafe } = require('./src/security/url-guards');
 
 const allowedOrigin = 'https://app.breakoutprop.com';
-const allowedProtocols = new Set(['http:', 'https:']);
-
-function openExternalIfSafe(targetUrl, openExternal = shell.openExternal) {
-  if (typeof targetUrl !== 'string') {
-    return false;
-  }
-
-  let parsed;
-
-  try {
-    parsed = new URL(targetUrl);
-  } catch {
-    return false;
-  }
-
-  if (!allowedProtocols.has(parsed.protocol)) {
-    return false;
-  }
-
-  openExternal(targetUrl);
-  return true;
-}
 
 function createWindow() {
   const win = new BrowserWindow({
