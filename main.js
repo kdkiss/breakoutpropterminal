@@ -1,8 +1,23 @@
 const path = require('path');
 const { app, BrowserWindow, shell, session } = require('electron');
 
-const allowedOrigin = 'https://app.breakoutprop.com';
-const allowedProtocols = new Set(['http:', 'https:']);
+const defaultStartUrl = 'https://app.breakoutprop.com/';
+const startUrl = process.env.ELECTRON_START_URL || defaultStartUrl;
+
+let allowedOrigin = 'https://app.breakoutprop.com';
+try {
+  allowedOrigin = new URL(startUrl).origin;
+} catch (error) {
+  allowedOrigin = new URL(defaultStartUrl).origin;
+}
+
+if (process.env.ELECTRON_HEADLESS === '1') {
+  app.commandLine.appendSwitch('headless');
+  app.commandLine.appendSwitch('disable-gpu');
+  app.commandLine.appendSwitch('disable-software-rasterizer');
+  app.commandLine.appendSwitch('no-sandbox');
+}
+
 
 function openExternalIfSafe(targetUrl, openExternal = shell.openExternal) {
   let parsed;
@@ -40,7 +55,7 @@ function createWindow() {
     },
   });
 
-  win.loadURL('https://app.breakoutprop.com/');
+  win.loadURL(startUrl);
 
   win.webContents.setWindowOpenHandler(({ url }) => {
     try {
@@ -68,10 +83,28 @@ function createWindow() {
   });
 }
 
-function bootstrap() {
-  if (require('electron-squirrel-startup')) {
-    app.quit();
-    return;
+app.whenReady().then(() => {
+  if (session.defaultSession) {
+    session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
+      const responseHeaders = details.responseHeaders || {};
+      const hasContentSecurityPolicy = Object.keys(responseHeaders).some(
+        (header) => header.toLowerCase() === 'content-security-policy',
+      );
+
+      if (!hasContentSecurityPolicy) {
+        responseHeaders['Content-Security-Policy'] = [
+          "default-src 'self' https://app.breakoutprop.com https://*.breakoutprop.com data: blob:; " +
+            "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://app.breakoutprop.com https://*.breakoutprop.com; " +
+            "connect-src 'self' https://app.breakoutprop.com https://*.breakoutprop.com wss://*.breakoutprop.com; " +
+            "img-src 'self' data: https://app.breakoutprop.com https://*.breakoutprop.com; " +
+            "style-src 'self' 'unsafe-inline' https://app.breakoutprop.com https://*.breakoutprop.com; " +
+            "frame-ancestors 'self';",
+        ];
+      }
+
+      callback({ responseHeaders });
+    });
+
   }
 
   app.whenReady().then(() => {
