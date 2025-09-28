@@ -44,8 +44,7 @@ function buildContentSecurityPolicy() {
 
 const allowedOrigin = 'https://app.breakoutprop.com';
 const allowedProtocols = new Set(['http:', 'https:']);
-
-
+let startUrl = allowedOrigin;
 
 function openExternalIfSafe(targetUrl, openExternal = shell.openExternal) {
   let parsed;
@@ -111,36 +110,15 @@ function createWindow() {
   });
 }
 
-app.whenReady().then(() => {
-  if (session.defaultSession) {
-    session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
-      const responseHeaders = details.responseHeaders || {};
-      const hasContentSecurityPolicy = Object.keys(responseHeaders).some(
-        (header) => header.toLowerCase() === 'content-security-policy',
-      );
-
-      if (!hasContentSecurityPolicy) {
-        responseHeaders['Content-Security-Policy'] = [
-          "default-src 'self' https://app.breakoutprop.com https://*.breakoutprop.com data: blob:; " +
-            "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://app.breakoutprop.com https://*.breakoutprop.com; " +
-            "connect-src 'self' https://app.breakoutprop.com https://*.breakoutprop.com wss://*.breakoutprop.com; " +
-            "img-src 'self' data: https://app.breakoutprop.com https://*.breakoutprop.com; " +
-            "style-src 'self' 'unsafe-inline' https://app.breakoutprop.com https://*.breakoutprop.com; " +
-            "frame-ancestors 'self';",
-        ];
-      }
-
-      callback({ responseHeaders });
-    });
-
-  }
+function bootstrap() {
+  startUrl = process.env.ELECTRON_START_URL || allowedOrigin;
 
   app.whenReady().then(() => {
     if (session.defaultSession) {
       session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
         const responseHeaders = details.responseHeaders || {};
         const hasContentSecurityPolicy = Object.keys(responseHeaders).some(
-          (header) => header.toLowerCase() === 'content-security-policy'
+          (header) => header.toLowerCase() === 'content-security-policy',
         );
 
         if (!hasContentSecurityPolicy) {
