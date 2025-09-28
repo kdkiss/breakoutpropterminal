@@ -173,6 +173,8 @@ function bootstrap() {
     }
   }
 
+  startUrl = normalizedStartUrl;
+
   if (typeof startUrl === 'string') {
     const isHttp = startUrl.startsWith('http://') || startUrl.startsWith('https://');
 
@@ -185,7 +187,6 @@ function bootstrap() {
       }
     }
   }
-
 
   app.whenReady().then(() => {
     if (session.defaultSession) {
