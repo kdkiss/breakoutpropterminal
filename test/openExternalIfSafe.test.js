@@ -5,7 +5,7 @@ const assert = require('node:assert/strict');
 
 const { openExternalIfSafe } = require('../main.js');
 
-test('allows vetted protocols to open externally', () => {
+test('allows https URLs to open externally', () => {
   let openedUrl = null;
   const openExternalStub = (url) => {
     openedUrl = url;
@@ -31,6 +31,7 @@ test('allows vetted protocols to open externally', () => {
 
   assert.equal(httpResult, true);
   assert.equal(openedUrl, 'http://example.com/basic');
+
 });
 
 test('rejects URLs with disallowed protocols', () => {

@@ -60,6 +60,7 @@ function ensureContentSecurityPolicy(details, callback) {
 const defaultAllowedOrigin = 'https://app.breakoutprop.com';
 let allowedOrigins = new Set([defaultAllowedOrigin]);
 const allowedProtocols = new Set(['http:', 'https:']);
+
 let startUrl = defaultAllowedOrigin;
 
 
@@ -96,7 +97,13 @@ function openExternalIfSafe(targetUrl, openExternal = shell.openExternal) {
     return false;
   }
 
-  openExternal(parsed.toString());
+  const normalized = parsed.toString();
+
+  if (!normalized.startsWith('https://')) {
+    return false;
+  }
+
+  openExternal(normalized);
   return true;
 }
 
@@ -145,6 +152,7 @@ function bootstrap() {
       try {
         const parsedStart = new URL(startUrl);
         allowedOrigins.add(parsedStart.origin);
+
       } catch {
         startUrl = defaultAllowedOrigin;
       }

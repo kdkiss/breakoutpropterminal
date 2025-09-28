@@ -173,6 +173,7 @@ test(
       'https://example.com/elsewhere',
     ]);
 
+
     delete process.env.ELECTRON_START_URL;
     __resetForTesting();
   },
