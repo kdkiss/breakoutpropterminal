@@ -120,7 +120,7 @@ test(
     await flushPromises();
 
     const [createdWindow] = double.BrowserWindowStub.instances;
-    assert.deepEqual(createdWindow.loadCalls, ['http://localhost:3000']);
+    assert.deepEqual(createdWindow.loadCalls, ['http://localhost:3000/']);
 
     assert.ok(createdWindow.windowOpenHandler, 'expected window open handler to be registered');
 
@@ -176,33 +176,79 @@ test(
   'bootstrap falls back to default when ELECTRON_START_URL has unsupported protocol',
   { concurrency: false },
   async () => {
+    const invalidCases = [
+      { label: 'missing protocol', value: 'localhost:3000' },
+      { label: 'javascript scheme', value: 'javascript:alert(1)' },
+      { label: 'whitespace', value: '   ' },
+      { label: 'malformed string', value: '::://broken' },
+    ];
+
+    for (const { label, value } of invalidCases) {
+      const double = createElectronDouble();
+      __setElectronForTesting(double.bindings);
+
+      const warnings = [];
+      const originalWarn = console.warn;
+      console.warn = (...args) => {
+        warnings.push(args.join(' '));
+      };
+
+      process.env.ELECTRON_START_URL = value;
+
+      try {
+        bootstrap();
+        await flushPromises();
+
+        const [createdWindow] = double.BrowserWindowStub.instances;
+        assert.deepEqual(
+          createdWindow.loadCalls,
+          ['https://app.breakoutprop.com'],
+          `expected fallback for ${label}`,
+        );
+        assert.ok(
+          warnings.some((message) => message.includes(`"${value}"`)),
+          `expected warning for ${label}`,
+        );
+      } finally {
+        console.warn = originalWarn;
+        delete process.env.ELECTRON_START_URL;
+        __resetForTesting();
+      }
+    }
+  },
+);
+
+test(
+  'bootstrap accepts file:// overrides and keeps navigation in-app',
+  { concurrency: false },
+  async () => {
     const double = createElectronDouble();
     __setElectronForTesting(double.bindings);
 
-    const originalWarn = console.warn;
-    const warnings = [];
-    console.warn = (...args) => {
-      warnings.push(args.join(' '));
+    process.env.ELECTRON_START_URL = '  file:///tmp/index.html  ';
+
+    bootstrap();
+    await flushPromises();
+
+    const [createdWindow] = double.BrowserWindowStub.instances;
+    assert.deepEqual(createdWindow.loadCalls, ['file:///tmp/index.html']);
+
+    assert.ok(createdWindow.windowOpenHandler, 'expected window open handler to be registered');
+    const allowResult = createdWindow.windowOpenHandler({
+      url: 'file:///tmp/next.html',
+    });
+    assert.deepEqual(allowResult, { action: 'allow' });
+
+    const navHandler = createdWindow.webContentsHandlers['will-navigate'];
+    const event = { prevented: false };
+    event.preventDefault = () => {
+      event.prevented = true;
     };
 
-    process.env.ELECTRON_START_URL = 'localhost:3000';
+    navHandler(event, 'file:///tmp/next.html');
+    assert.equal(event.prevented, false);
 
-    try {
-      bootstrap();
-      await flushPromises();
-
-      const [createdWindow] = double.BrowserWindowStub.instances;
-      assert.deepEqual(createdWindow.loadCalls, ['https://app.breakoutprop.com']);
-      assert.ok(
-        warnings.some((message) =>
-          message.includes('Ignoring unsupported ELECTRON_START_URL value "localhost:3000"'),
-        ),
-        'expected warning about unsupported ELECTRON_START_URL',
-      );
-    } finally {
-      console.warn = originalWarn;
-      delete process.env.ELECTRON_START_URL;
-      __resetForTesting();
-    }
+    delete process.env.ELECTRON_START_URL;
+    __resetForTesting();
   },
 );

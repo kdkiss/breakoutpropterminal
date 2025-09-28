@@ -53,7 +53,6 @@ function ensureContentSecurityPolicy(details, callback) {
 
 const defaultAllowedOrigin = 'https://app.breakoutprop.com';
 let allowedOrigins = new Set([defaultAllowedOrigin]);
-const allowedProtocols = new Set(['https:']);
 
 let startUrl = defaultAllowedOrigin;
 
@@ -64,6 +63,10 @@ function resetAllowedOrigins() {
 function isOriginAllowed(url) {
   try {
     const parsed = new URL(url);
+    if (parsed.protocol === 'file:') {
+      return startUrl.startsWith('file://');
+    }
+
     return allowedOrigins.has(parsed.origin);
   } catch {
     return false;
@@ -85,13 +88,13 @@ function openExternalIfSafe(targetUrl, openExternal = shell.openExternal) {
     return false;
   }
 
-  if (!allowedProtocols.has(parsed.protocol)) {
+  if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') {
     return false;
   }
 
   const normalized = parsed.toString();
 
-  if (!normalized.startsWith('https://')) {
+  if (parsed.protocol === 'http:' && !allowedOrigins.has(parsed.origin)) {
     return false;
   }
 
@@ -135,20 +138,38 @@ function createWindow() {
 
 function bootstrap() {
   resetAllowedOrigins();
+
   const providedStartUrl = process.env.ELECTRON_START_URL;
-  startUrl = providedStartUrl || defaultAllowedOrigin;
+  let normalizedStartUrl = defaultAllowedOrigin;
 
   if (typeof providedStartUrl === 'string') {
-    const hasSupportedProtocol =
-      providedStartUrl.startsWith('http://') ||
-      providedStartUrl.startsWith('https://') ||
-      providedStartUrl.startsWith('file://');
+    const trimmed = providedStartUrl.trim();
 
-    if (!hasSupportedProtocol) {
+    if (trimmed) {
+      try {
+        const parsedStart = new URL(trimmed);
+
+        // Reject unknown schemes so a misconfigured environment cannot coerce
+        // the shell into executing arbitrary protocols inside Electron.
+        if (parsedStart.protocol === 'http:' || parsedStart.protocol === 'https:') {
+          normalizedStartUrl = parsedStart.toString();
+          allowedOrigins.add(parsedStart.origin);
+        } else if (parsedStart.protocol === 'file:') {
+          normalizedStartUrl = parsedStart.toString();
+        } else {
+          console.warn(
+            `Ignoring unsupported ELECTRON_START_URL value "${providedStartUrl}". Falling back to ${defaultAllowedOrigin}.`,
+          );
+        }
+      } catch {
+        console.warn(
+          `Ignoring unsupported ELECTRON_START_URL value "${providedStartUrl}". Falling back to ${defaultAllowedOrigin}.`,
+        );
+      }
+    } else if (providedStartUrl.length > 0) {
       console.warn(
         `Ignoring unsupported ELECTRON_START_URL value "${providedStartUrl}". Falling back to ${defaultAllowedOrigin}.`,
       );
-      startUrl = defaultAllowedOrigin;
     }
   }
 
@@ -164,6 +185,7 @@ function bootstrap() {
       }
     }
   }
+
 
   app.whenReady().then(() => {
     if (session.defaultSession) {
