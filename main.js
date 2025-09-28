@@ -143,7 +143,22 @@ function createWindow() {
 
 function bootstrap() {
   resetAllowedOrigins();
-  startUrl = process.env.ELECTRON_START_URL || defaultAllowedOrigin;
+  const providedStartUrl = process.env.ELECTRON_START_URL;
+  startUrl = providedStartUrl || defaultAllowedOrigin;
+
+  if (typeof providedStartUrl === 'string') {
+    const hasSupportedProtocol =
+      providedStartUrl.startsWith('http://') ||
+      providedStartUrl.startsWith('https://') ||
+      providedStartUrl.startsWith('file://');
+
+    if (!hasSupportedProtocol) {
+      console.warn(
+        `Ignoring unsupported ELECTRON_START_URL value "${providedStartUrl}". Falling back to ${defaultAllowedOrigin}.`,
+      );
+      startUrl = defaultAllowedOrigin;
+    }
+  }
 
   if (typeof startUrl === 'string') {
     const isHttp = startUrl.startsWith('http://') || startUrl.startsWith('https://');
