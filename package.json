@@ -13,13 +13,13 @@
     "test:unit": "node --test test",
     "test": "npm run lint && npm run format && npm run test:unit && npm run test:integration",
     "test:integration": "node scripts/run-playwright.js",
-
     "start": "electron-forge start",
     "prepackage": "npm run generate:icons",
     "package": "electron-forge package",
     "premake": "npm run generate:icons",
     "make": "electron-forge make",
-    "build:web": "node scripts/build-web.js"
+    "build:web": "node scripts/build-web.js",
+    "download:installer": "node scripts/download-latest-installer.js"
   },
   "keywords": [],
   "devDependencies": {

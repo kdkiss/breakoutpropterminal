@@ -14,9 +14,7 @@ function captureResult(fn) {
 test('ensureContentSecurityPolicy injects a nonce-based header when missing', async () => {
   const details = { responseHeaders: {} };
 
-  const result = await captureResult((callback) =>
-    ensureContentSecurityPolicy(details, callback),
-  );
+  const result = await captureResult((callback) => ensureContentSecurityPolicy(details, callback));
 
   assert.ok(result.responseHeaders['Content-Security-Policy']);
   const [policy] = result.responseHeaders['Content-Security-Policy'];
@@ -33,9 +31,7 @@ test('ensureContentSecurityPolicy preserves existing headers', async () => {
 
   const details = { responseHeaders: originalHeaders };
 
-  const result = await captureResult((callback) =>
-    ensureContentSecurityPolicy(details, callback),
-  );
+  const result = await captureResult((callback) => ensureContentSecurityPolicy(details, callback));
 
   assert.strictEqual(result.responseHeaders, originalHeaders);
   assert.deepEqual(result.responseHeaders['content-security-policy'], ["default-src 'self'"]);

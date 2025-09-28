@@ -11,10 +11,7 @@ test('allows https URLs to open externally', () => {
     openedUrl = url;
   };
 
-  const httpsResult = openExternalIfSafe(
-    'https://example.com/path',
-    openExternalStub,
-  );
+  const httpsResult = openExternalIfSafe('https://example.com/path', openExternalStub);
 
   assert.equal(httpsResult, true);
   assert.equal(openedUrl, 'https://example.com/path');
@@ -31,7 +28,6 @@ test('allows https URLs to open externally', () => {
 
   assert.equal(httpResult, false);
   assert.equal(openedUrl, null);
-
 });
 
 test('rejects URLs with disallowed protocols', () => {

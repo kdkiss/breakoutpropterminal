@@ -54,6 +54,23 @@ npm run package
 npm run make
 ```
 
+### Downloading the latest published installer
+
+To retrieve the most up-to-date installer published on GitHub, use the bundled downloader script. The tool automatically selects the best asset for your platform and architecture, writing the installer to the current working directory by default.
+
+```bash
+# Download the newest installer for your current platform
+npm run download:installer
+
+# Override the platform/architecture or save location when needed
+node scripts/download-latest-installer.js \
+  --platform win32 \
+  --arch x64 \
+  --output ./downloads
+```
+
+Set a `GITHUB_TOKEN` (or `GH_TOKEN`) environment variable if you need to authenticate to avoid GitHub API rate limits.
+
 Refer to the Forge configuration embedded in `package.json` (`package.json → config.forge`) for maker and plugin settings. Within that JSON block you can add, remove, or adjust makers and plugins to match the installers and packaging tweaks your release process requires.
 
 ## Updating an Existing Installation

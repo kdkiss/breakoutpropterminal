@@ -8,20 +8,14 @@ let { app, BrowserWindow, shell, session } = electron;
 // UI pulling first-party assets plus Cloudflare's analytics beacon. Keep these
 // allow-lists in sync with that remote footprint so the nonce-based CSP stays
 // permissive only where the app genuinely needs it.
-const breakoutOrigins = [
-  'https://app.breakoutprop.com',
-  'https://*.breakoutprop.com',
-];
+const breakoutOrigins = ['https://app.breakoutprop.com', 'https://*.breakoutprop.com'];
 const cspScriptOrigins = [
   ...breakoutOrigins,
   // Cloudflare Radar beacon script used by the hosted experience.
   'https://performance.radar.cloudflare.com',
 ];
 const cspStyleOrigins = breakoutOrigins;
-const cspConnectOrigins = [
-  ...breakoutOrigins,
-  'wss://*.breakoutprop.com',
-];
+const cspConnectOrigins = [...breakoutOrigins, 'wss://*.breakoutprop.com'];
 
 function buildContentSecurityPolicy() {
   const nonce = crypto.randomBytes(16).toString('base64');
@@ -62,7 +56,6 @@ let allowedOrigins = new Set([defaultAllowedOrigin]);
 
 let startUrl = defaultAllowedOrigin;
 
-
 function resetAllowedOrigins() {
   allowedOrigins = new Set([defaultAllowedOrigin]);
 }
@@ -79,7 +72,6 @@ function isOriginAllowed(url) {
     return false;
   }
 }
-
 
 function openExternalIfSafe(targetUrl, openExternal = shell.openExternal) {
   let parsed;
@@ -181,7 +173,19 @@ function bootstrap() {
     }
   }
 
-  startUrl = normalizedStartUrl;
+  if (typeof startUrl === 'string') {
+    const isHttp = startUrl.startsWith('http://') || startUrl.startsWith('https://');
+
+    if (isHttp) {
+      try {
+        const parsedStart = new URL(startUrl);
+        allowedOrigins.add(parsedStart.origin);
+      } catch {
+        startUrl = defaultAllowedOrigin;
+      }
+    }
+  }
+
 
   app.whenReady().then(() => {
     if (session.defaultSession) {
