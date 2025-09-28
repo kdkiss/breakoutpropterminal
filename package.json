@@ -7,8 +7,12 @@
   "license": "ISC",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
+    "generate:icons": "node scripts/generate-icons.js",
+    "prestart": "npm run generate:icons",
     "start": "electron-forge start",
+    "prepackage": "npm run generate:icons",
     "package": "electron-forge package",
+    "premake": "npm run generate:icons",
     "make": "electron-forge make"
   },
   "keywords": [],

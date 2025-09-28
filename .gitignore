@@ -4,3 +4,7 @@ dist/
 *.exe
 *.zip
 *.nupkg
+# Generated Electron Forge icon assets
+assets/icon.icns
+assets/icon.ico
+assets/icon.png
