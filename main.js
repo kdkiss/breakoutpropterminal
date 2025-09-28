@@ -1,22 +1,7 @@
+const path = require('path');
 const { app, BrowserWindow, shell, session } = require('electron');
 
-const ALLOWED_HOSTS = ['app.breakoutprop.com'];
-
-function isAllowedUrl(targetUrl) {
-  try {
-    const parsedUrl = new URL(targetUrl);
-    const { protocol, host } = parsedUrl;
-    if (protocol !== 'https:') {
-      return false;
-    }
-
-    return ALLOWED_HOSTS.some(
-      (allowedHost) => host === allowedHost || host.endsWith(`.${allowedHost}`)
-    );
-  } catch (error) {
-    return false;
-  }
-}
+const allowedOrigin = 'https://app.breakoutprop.com';
 
 if (require('electron-squirrel-startup')) {
   app.quit();
@@ -31,6 +16,7 @@ function createWindow() {
       nodeIntegration: false,
       contextIsolation: true,
       sandbox: true,
+      preload: path.join(__dirname, 'preload.js'),
       enableRemoteModule: false,
     },
   });
@@ -38,8 +24,12 @@ function createWindow() {
   win.loadURL('https://app.breakoutprop.com/');
 
   win.webContents.setWindowOpenHandler(({ url }) => {
-    if (isAllowedUrl(url)) {
-      return { action: 'allow' };
+    try {
+      if (new URL(url).origin === allowedOrigin) {
+        return { action: 'allow' };
+      }
+    } catch (error) {
+      // fall through to deny below
     }
 
     shell.openExternal(url);
@@ -47,7 +37,12 @@ function createWindow() {
   });
 
   win.webContents.on('will-navigate', (event, url) => {
-    if (!isAllowedUrl(url)) {
+    try {
+      if (new URL(url).origin !== allowedOrigin) {
+        event.preventDefault();
+        shell.openExternal(url);
+      }
+    } catch (error) {
       event.preventDefault();
       shell.openExternal(url);
     }
