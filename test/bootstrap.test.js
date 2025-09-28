@@ -97,10 +97,7 @@ test(
     await flushPromises();
 
     assert.equal(double.onHeadersReceivedHandlers.length, 1);
-    assert.strictEqual(
-      double.onHeadersReceivedHandlers[0],
-      ensureContentSecurityPolicy,
-    );
+    assert.strictEqual(double.onHeadersReceivedHandlers[0], ensureContentSecurityPolicy);
 
     assert.equal(double.BrowserWindowStub.instances.length, 1);
     const [createdWindow] = double.BrowserWindowStub.instances;
@@ -125,10 +122,7 @@ test(
     const [createdWindow] = double.BrowserWindowStub.instances;
     assert.deepEqual(createdWindow.loadCalls, ['http://localhost:3000']);
 
-    assert.ok(
-      createdWindow.windowOpenHandler,
-      'expected window open handler to be registered',
-    );
+    assert.ok(createdWindow.windowOpenHandler, 'expected window open handler to be registered');
 
     const navHandler = createdWindow.webContentsHandlers['will-navigate'];
     assert.ok(navHandler, 'expected will-navigate handler to be registered');
@@ -172,7 +166,6 @@ test(
       'https://example.com/out',
       'https://example.com/elsewhere',
     ]);
-
 
     delete process.env.ELECTRON_START_URL;
     __resetForTesting();

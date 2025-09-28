@@ -97,9 +97,7 @@ test.describe('Breakout Prop Electron app', () => {
 
       const breakoutPopup = await breakoutPopupPromise;
       await breakoutPopup.waitForLoadState('domcontentloaded').catch(() => {});
-      expect(await breakoutPopup.url()).toBe(
-        'https://app.breakoutprop.com/dashboard',
-      );
+      expect(await breakoutPopup.url()).toBe('https://app.breakoutprop.com/dashboard');
       await breakoutPopup.close();
     } finally {
       if (electronApp) {
