@@ -153,7 +153,6 @@ function bootstrap() {
         // the shell into executing arbitrary protocols inside Electron.
         if (parsedStart.protocol === 'http:' || parsedStart.protocol === 'https:') {
           normalizedStartUrl = parsedStart.toString();
-          allowedOrigins.add(parsedStart.origin);
         } else if (parsedStart.protocol === 'file:') {
           normalizedStartUrl = parsedStart.toString();
         } else {
