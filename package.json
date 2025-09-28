@@ -10,8 +10,8 @@
     "generate:icons": "node scripts/generate-icons.js",
     "prestart": "npm run generate:icons",
 
-    "lint": "eslint .",
-    "test": "npm run lint",
+    "lint": "ESLINT_USE_FLAT_CONFIG=false eslint .",
+    "test": "npm run lint && node --test",
     "start": "electron-forge start",
     "prepackage": "npm run generate:icons",
     "package": "electron-forge package",
