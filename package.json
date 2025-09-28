@@ -6,12 +6,12 @@
   "author": "Your Name or Organization",
   "license": "ISC",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
     "generate:icons": "node scripts/generate-icons.js",
     "prestart": "npm run generate:icons",
 
     "lint": "ESLINT_USE_FLAT_CONFIG=false eslint .",
-    "test": "npm run lint && node --test",
+    "test:unit": "node --test",
+    "test": "npm run lint && npm run test:unit",
     "start": "electron-forge start",
     "prepackage": "npm run generate:icons",
     "package": "electron-forge package",
