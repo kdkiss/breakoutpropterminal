@@ -178,3 +178,38 @@ test(
     __resetForTesting();
   },
 );
+
+test(
+  'bootstrap falls back to default when ELECTRON_START_URL has unsupported protocol',
+  { concurrency: false },
+  async () => {
+    const double = createElectronDouble();
+    __setElectronForTesting(double.bindings);
+
+    const originalWarn = console.warn;
+    const warnings = [];
+    console.warn = (...args) => {
+      warnings.push(args.join(' '));
+    };
+
+    process.env.ELECTRON_START_URL = 'localhost:3000';
+
+    try {
+      bootstrap();
+      await flushPromises();
+
+      const [createdWindow] = double.BrowserWindowStub.instances;
+      assert.deepEqual(createdWindow.loadCalls, ['https://app.breakoutprop.com']);
+      assert.ok(
+        warnings.some((message) =>
+          message.includes('Ignoring unsupported ELECTRON_START_URL value "localhost:3000"'),
+        ),
+        'expected warning about unsupported ELECTRON_START_URL',
+      );
+    } finally {
+      console.warn = originalWarn;
+      delete process.env.ELECTRON_START_URL;
+      __resetForTesting();
+    }
+  },
+);
