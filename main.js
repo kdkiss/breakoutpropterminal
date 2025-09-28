@@ -55,12 +55,11 @@ function ensureContentSecurityPolicy(details, callback) {
   callback({ responseHeaders });
 }
 
-const allowedOrigin = 'https://app.breakoutprop.com';
-// Only allow encrypted schemes we explicitly trust when delegating to the
-// system browser. Tightening this list avoids leaking sensitive URLs to
-// handlers that do not provide transport security.
-const allowedProtocols = new Set(['https:']);
-let startUrl = allowedOrigin;
+const defaultAllowedOrigin = 'https://app.breakoutprop.com';
+let allowedOrigin = defaultAllowedOrigin;
+const allowedProtocols = new Set(['http:', 'https:']);
+let startUrl = defaultAllowedOrigin;
+
 
 function openExternalIfSafe(targetUrl, openExternal = shell.openExternal) {
   let parsed;
@@ -127,7 +126,22 @@ function createWindow() {
 }
 
 function bootstrap() {
-  startUrl = process.env.ELECTRON_START_URL || allowedOrigin;
+  allowedOrigin = defaultAllowedOrigin;
+  startUrl = process.env.ELECTRON_START_URL || defaultAllowedOrigin;
+
+  if (typeof startUrl === 'string') {
+    const isHttp = startUrl.startsWith('http://') || startUrl.startsWith('https://');
+
+    if (isHttp) {
+      try {
+        const parsedStart = new URL(startUrl);
+        allowedOrigin = parsedStart.origin;
+      } catch {
+        allowedOrigin = defaultAllowedOrigin;
+        startUrl = defaultAllowedOrigin;
+      }
+    }
+  }
 
   app.whenReady().then(() => {
     if (session.defaultSession) {
