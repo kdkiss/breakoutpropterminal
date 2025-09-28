@@ -1,69 +1,97 @@
 # BreakoutProp Terminal
 
-BreakoutProp Terminal is an Electron-based desktop shell that wraps the BreakoutProp trading web experience in a packaged application.
+BreakoutProp Terminal packages the BreakoutProp trading experience inside a cross-platform Electron desktop shell built with Electron Forge.
 
 ## Prerequisites
 
-Before getting started, ensure the following tools are installed:
+Install the following tools before working on the project:
 
-- [Node.js](https://nodejs.org/) (version 18 or later is recommended for Electron 33)
-- npm (bundled with Node.js)
-- Git (optional, but recommended for cloning and updating the repository)
+- **Node.js 18.x or newer** – Electron 33 (used by this project) requires at least Node 18 to build native modules reliably.
+- **npm** – installed automatically with Node.js.
+- **Git** – recommended for cloning the repository and receiving updates.
+
+If you plan to ship native installers, ensure you have the platform-specific build tooling required by Electron Forge (for example, Xcode command-line tools on macOS or the build-essential package group on Debian/Ubuntu).
 
 ## Installation
 
-1. Clone this repository.
-2. Install dependencies:
+Clone the repository and install dependencies:
 
-   ```bash
-   npm install
-   ```
+```bash
+git clone https://github.com/your-org/breakoutpropterminal.git
+cd breakoutpropterminal
+npm install
+```
 
 ## Running the App in Development
 
-Launch the Electron app with hot reloading support provided by Electron Forge:
+Start Electron with live-reload support:
 
 ```bash
 npm start
 ```
 
-This command compiles the application and opens the BreakoutProp web terminal inside the Electron window.
+`npm start` runs `electron-forge start`, generates icons through the `prestart` hook, and opens the BreakoutProp web terminal within the Electron shell.
 
 ## Packaging and Distribution
 
-Electron Forge provides multiple targets out of the box:
-
-- Create unpackaged builds for local testing:
-  ```bash
-  npm run package
-  ```
-- Create distributable installers/archives for supported platforms:
-  ```bash
-  npm run make
-  ```
-
-The generated artifacts are placed in the `out/` directory. You can configure additional packaging options in `package.json` or `forge.config.js`.
-
-## Testing and Linting
-
-Lint the project using ESLint to ensure code quality and catch common issues:
+Electron Forge can generate distributable artifacts through the included `make` targets. Icons are generated automatically before each build step.
 
 ```bash
-npm test
+# Create unpackaged output for local inspection
+npm run package
+
+# Produce platform-specific installers/archives in the out/ directory
+npm run make
 ```
 
-The lint script runs automatically in CI to prevent regressions.
+Refer to `forge.config.js` for maker configuration and add or adjust makers as needed for your distribution targets.
 
-## Security Notes
+## Updating an Existing Installation
 
-The application loads remote content from BreakoutProp servers within an Electron `BrowserWindow`. When loading remote content:
+To pick up the latest application changes:
 
-- Always validate the URLs you load and restrict navigation to trusted domains only.
-- Avoid enabling the Node.js integration in renderer processes unless strictly necessary.
-- Keep dependencies updated to receive the latest security patches.
-- Review Electron's security guidelines regularly: <https://www.electronjs.org/docs/latest/tutorial/security>
+1. Pull the most recent code.
+   ```bash
+   git pull
+   ```
+2. Reinstall dependencies in case new packages were introduced.
+   ```bash
+   npm install
+   ```
+3. Rebuild artifacts or restart the development server as needed (`npm start`, `npm run package`, or `npm run make`).
+
+The project does not currently ship an auto-updater; distribute new installers generated with `npm run make` whenever an update is required.
+
+## Security Model
+
+The Electron shell hosts the remote BreakoutProp web application at `https://app.breakoutprop.com` and applies the following hardening measures (see `main.js`):
+
+- **Renderer isolation** – `nodeIntegration` is disabled, `contextIsolation` is enabled, and the renderer runs in a sandboxed environment with a minimal preload script to prevent access to Node.js APIs from web content.
+- **Navigation restrictions** – window creation and in-app navigation are limited to the trusted BreakoutProp origin; external links open in the system browser instead of the Electron window.
+- **Content Security Policy enforcement** – responses without a CSP header receive a restrictive default policy covering scripts, styles, images, WebSocket connections, and frame ancestors.
+- **Remote content** – no local HTML is served. The hosted BreakoutProp application continues to handle authentication; no additional credentials or API keys are stored in the desktop shell.
+
+The app does not require custom environment variables or bundled secrets. Users authenticate against BreakoutProp services directly inside the embedded web experience.
+
+## Contributing and Testing
+
+Contributions are welcome. Before submitting changes:
+
+1. Ensure dependencies are installed (`npm install`).
+2. Run the lint suite (wired to `npm test`) to enforce project standards.
+   ```bash
+   npm test
+   ```
+   or
+   ```bash
+   npm run lint
+   ```
+3. Verify the app still runs (`npm start`) and, if applicable, that packaged artifacts build successfully (`npm run make`).
+
+Please follow conventional Git workflows (feature branches + pull requests) and document significant changes in the changelog or release notes when distributing new builds.
 
 ## Additional Resources
 
 - [Electron Forge Documentation](https://www.electronforge.io/)
 - [Electron Security Checklist](https://www.electronjs.org/docs/latest/tutorial/security)
+- [Electron Auto-Updates Guide](https://www.electronjs.org/docs/latest/tutorial/updates) – reference if you plan to add update infrastructure in the future.
