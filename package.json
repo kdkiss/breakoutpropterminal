@@ -9,6 +9,9 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "generate:icons": "node scripts/generate-icons.js",
     "prestart": "npm run generate:icons",
+
+    "lint": "eslint .",
+    "test": "npm run lint",
     "start": "electron-forge start",
     "prepackage": "npm run generate:icons",
     "package": "electron-forge package",
@@ -26,40 +29,13 @@
     "@electron-forge/plugin-fuses": "^7.6.0",
     "@electron/fuses": "^1.8.0",
     "electron": "33.2.1",
-    "electron-winstaller": "^5.4.0"
+    "electron-winstaller": "^5.4.0",
+    "eslint": "^8.57.0"
   },
   "dependencies": {
     "electron-squirrel-startup": "^1.0.1"
   },
   "config": {
-    "forge": {
-      "packagerConfig": {
-        "icon": "./assets/icon"
-      },
-      "makers": [
-        {
-          "name": "@electron-forge/maker-squirrel",
-          "config": {
-            "name": "breakout_prop_app",
-            "authors": "Your Name or Organization",
-            "description": "A desktop app interface for Breakout Prop"
-          }
-        },
-        {
-          "name": "@electron-forge/maker-zip",
-          "platforms": [
-            "win32"
-          ]
-        },
-        {
-          "name": "@electron-forge/maker-deb",
-          "config": {}
-        },
-        {
-          "name": "@electron-forge/maker-rpm",
-          "config": {}
-        }
-      ]
-    }
+    "forge": "./forge.config.js"
   }
 }
