@@ -139,7 +139,7 @@ test(
       url: 'http://localhost:3000/other',
     });
     assert.deepEqual(denyResult, { action: 'deny' });
-    assert.deepEqual(double.openExternalCalls, ['http://localhost:3000/other']);
+    assert.deepEqual(double.openExternalCalls, []);
     delete process.env.ELECTRON_START_URL;
     __resetForTesting();
   },
