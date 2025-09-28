@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>BreakoutProp Terminal</title>
+    <link rel="stylesheet" href="./styles.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <header class="hero">
+      <div class="hero__content">
+        <h1>BreakoutProp Terminal</h1>
+        <p>
+          Launch the BreakoutProp trading experience in a hardened desktop
+          shell, purpose-built for focused execution and safe navigation.
+        </p>
+        <div class="hero__actions">
+          <a class="btn btn--primary" href="https://github.com/kdkiss/breakoutpropterminal/releases"
+            >Download installers</a
+          >
+          <a class="btn" href="#features">Explore the features</a>
+        </div>
+      </div>
+      <div class="hero__artwork" aria-hidden="true">
+        <div class="hero__orb"></div>
+      </div>
+    </header>
+
+    <main>
+      <section id="features" class="section section--features">
+        <h2>Why ship a dedicated terminal?</h2>
+        <div class="grid">
+          <article class="card">
+            <h3>Secure defaults</h3>
+            <p>
+              We isolate renderer processes, apply restrictive navigation
+              policies, and inject a modern content security policy before
+              remote pages load.
+            </p>
+          </article>
+          <article class="card">
+            <h3>First-party experience</h3>
+            <p>
+              The terminal wraps the official BreakoutProp interface, so users
+              authenticate and trade against the same endpoints they already
+              trust in the browser.
+            </p>
+          </article>
+          <article class="card">
+            <h3>Cross-platform delivery</h3>
+            <p>
+              Build installers with Electron Forge for Windows, macOS, or Linux
+              without rewriting your web application.
+            </p>
+          </article>
+        </div>
+      </section>
+
+      <section class="section section--callout">
+        <div class="callout">
+          <h2>Prefer the browser?</h2>
+          <p>
+            You can still access the BreakoutProp terminal online. Launch the
+            hosted experience directly in your browser if you do not need the
+            native shell.
+          </p>
+          <a class="btn btn--ghost" href="https://app.breakoutprop.com" target="_blank" rel="noopener"
+            >Open web terminal</a
+          >
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <p>
+        Built with Electron Forge. Inspect the source code or contribute on
+        <a href="https://github.com/kdkiss/breakoutpropterminal" target="_blank" rel="noopener"
+          >GitHub</a
+        >.
+      </p>
+    </footer>
+
+    <script src="./main.js" type="module"></script>
+  </body>
+</html>
