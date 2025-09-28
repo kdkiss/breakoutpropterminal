@@ -45,16 +45,20 @@ function buildContentSecurityPolicy() {
 const allowedOrigin = 'https://app.breakoutprop.com';
 const allowedProtocols = new Set(['http:', 'https:']);
 
-function openExternalIfSafe(targetUrl, openExternal = shell.openExternal) {
-  if (typeof targetUrl !== 'string') {
-    return false;
-  }
 
+
+function openExternalIfSafe(targetUrl, openExternal = shell.openExternal) {
   let parsed;
 
-  try {
-    parsed = new URL(targetUrl);
-  } catch {
+  if (targetUrl instanceof URL) {
+    parsed = targetUrl;
+  } else if (typeof targetUrl === 'string') {
+    try {
+      parsed = new URL(targetUrl);
+    } catch {
+      return false;
+    }
+  } else {
     return false;
   }
 
@@ -62,7 +66,7 @@ function openExternalIfSafe(targetUrl, openExternal = shell.openExternal) {
     return false;
   }
 
-  openExternal(targetUrl);
+  openExternal(parsed.toString());
   return true;
 }
 
@@ -79,7 +83,7 @@ function createWindow() {
     },
   });
 
-  win.loadURL('https://app.breakoutprop.com/');
+  win.loadURL(startUrl);
 
   win.webContents.setWindowOpenHandler(({ url }) => {
     try {
@@ -107,10 +111,28 @@ function createWindow() {
   });
 }
 
-function bootstrap() {
-  if (require('electron-squirrel-startup')) {
-    app.quit();
-    return;
+app.whenReady().then(() => {
+  if (session.defaultSession) {
+    session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
+      const responseHeaders = details.responseHeaders || {};
+      const hasContentSecurityPolicy = Object.keys(responseHeaders).some(
+        (header) => header.toLowerCase() === 'content-security-policy',
+      );
+
+      if (!hasContentSecurityPolicy) {
+        responseHeaders['Content-Security-Policy'] = [
+          "default-src 'self' https://app.breakoutprop.com https://*.breakoutprop.com data: blob:; " +
+            "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://app.breakoutprop.com https://*.breakoutprop.com; " +
+            "connect-src 'self' https://app.breakoutprop.com https://*.breakoutprop.com wss://*.breakoutprop.com; " +
+            "img-src 'self' data: https://app.breakoutprop.com https://*.breakoutprop.com; " +
+            "style-src 'self' 'unsafe-inline' https://app.breakoutprop.com https://*.breakoutprop.com; " +
+            "frame-ancestors 'self';",
+        ];
+      }
+
+      callback({ responseHeaders });
+    });
+
   }
 
   app.whenReady().then(() => {
